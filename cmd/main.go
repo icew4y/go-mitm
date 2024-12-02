@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"fmt"
+	go_mitm "github.com/icew4y/go-mitm"
 	"io"
 	"log"
 	"net"
@@ -151,20 +152,29 @@ func handleRequest(conn net.Conn) {
 }
 
 func main() {
-	listener, err := net.Listen("tcp", ":8080")
+	//listener, err := net.Listen("tcp", ":8080")
+	//if err != nil {
+	//	log.Fatalf("Failed to start listener: %v", err)
+	//}
+	//defer listener.Close()
+	//
+	//log.Println("Starting Proxy on :8080")
+	//
+	//for {
+	//	conn, err := listener.Accept()
+	//	if err != nil {
+	//		log.Printf("Failed to accept connection: %v", err)
+	//		continue
+	//	}
+	//	go handleRequest(conn)
+	//}
+
+	mitm, err := go_mitm.NewMITMProxy("0.0.0.0:8443")
 	if err != nil {
-		log.Fatalf("Failed to start listener: %v", err)
+		log.Fatalf("Failed to create proxy: %v", err)
 	}
-	defer listener.Close()
-
-	log.Println("Starting Proxy on :8080")
-
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			log.Printf("Failed to accept connection: %v", err)
-			continue
-		}
-		go handleRequest(conn)
+	err = mitm.Run()
+	if err != nil {
+		log.Fatalf("Failed to mitm.Run: %v", err)
 	}
 }
