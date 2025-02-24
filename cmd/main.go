@@ -12,7 +12,25 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
+
+func handleConnectConnection(conn net.Conn) {
+
+}
+
+func hanldeNormalHttp(req *http.Request, body []byte) (*http.Response, error) {
+	newReq, _ := http.NewRequest(req.Method, req.URL.String(), bytes.NewReader(body))
+	client := http.Client{
+		Timeout: time.Duration(time.Second * 30),
+	}
+	newReq.Header = req.Header
+	resp, err := client.Do(newReq)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
 
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
@@ -65,6 +83,18 @@ func handleConnection(conn net.Conn) {
 	fmt.Println("Host: ", request.Host)
 	fmt.Println("Path: ", request.URL)
 	fmt.Println("Body: ", string(fullBody))
+	if request.Method == "CONNECT" {
+		handleConnectConnection(conn)
+	} else {
+		resp, err := hanldeNormalHttp(request, fullBody)
+		if err != nil {
+			fmt.Printf("hanldeNormalHttp error: %v", err)
+			return
+		}
+		if err = resp.Write(conn); err != nil {
+			fmt.Printf("Failed to send back the response: %v", err)
+		}
+	}
 }
 
 func main() {

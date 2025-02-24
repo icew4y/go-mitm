@@ -18,11 +18,14 @@ A MITM proxy intercepts and manipulates network traffic between a client and a s
 ## Step1: Set Up a Basic HTTP Proxy
 - Implement an HTTP proxy that listens on a port
 - Capture and forward HTTP requests and responses
+- HTTP Tunneling for `CONNECT` method
 
 ## Step2: Add TLS Support for HTTPS Interception
 - Generate a self-signed CA certificate
 - Sign leaf certificates dynamically for different domains
 - Use `crypto/tls` and `mitmproxy` techniques to decrypt traffic
+- Parse Client Hello message
+- Deal with 0-RTT
 
 ## Step3: Parse and Modify Requests and Responses
 - Decode HTTP headers, body, and parameters
