@@ -46,7 +46,7 @@ A MITM proxy intercepts and manipulates network traffic between a client and a s
 
 
 
-## Components need to be implemented
+# Components need to be implemented
 
 ### Proxy Server
 - Listen on a port and handles HTTP/HTTPS requests
