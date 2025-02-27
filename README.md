@@ -87,37 +87,37 @@ Client <-> TLS Interceptor <-> Request Handler <-> Response Handler <-> Target S
 
 
 ## Step1: Set Up a Basic HTTP Proxy
-- Implement an HTTP proxy that listens on a port
-- Capture and forward HTTP requests and responses
-- HTTP Tunneling for `CONNECT` method
-- Proxy Authentication
+- [x] Implement an HTTP proxy that listens on a port
+- [x] Capture and forward HTTP requests and responses
+- [x] HTTP Tunneling for `CONNECT` method
+- [ ] Proxy Authentication
 
 ## Step2: Add TLS Support for HTTPS Interception
-- Generate a self-signed CA certificate
-- Sign leaf certificates dynamically for different domains
-- Use `crypto/tls` and `mitmproxy` techniques to decrypt traffic
-- Parse Client Hello message
-- Deal with 0-RTT
+- [ ] Generate a self-signed CA certificate
+- [ ] Sign leaf certificates dynamically for different domains
+- [ ] Use `crypto/tls` and `mitmproxy` techniques to decrypt traffic
+- [ ] Parse Client Hello message
+- [ ] Deal with 0-RTT
 
 ## Step3: Parse and Modify Requests and Responses
-- Decode HTTP headers, body, and parameters
-- Allow modifications (e.g., inject headers, replace payloads)
-- Support traffic inspection for debugging
+- [ ] Decode HTTP headers, body, and parameters
+- [ ] Allow modifications (e.g., inject headers, replace payloads)
+- [ ] Support traffic inspection for debugging
 
 ## Step4: Implement Forwarding Logic
-- Set up a TCP tunneling mechanism for HTTPS
-- May use golang built-in support `io.Copy`
+- [x] Set up a TCP tunneling mechanism for HTTPS
+- [x] May use golang built-in support `io.Copy`
 
 ## Step5: Logging and Debugging
-- Store HTTP request/response details in database
-- Implement real-time monitoring via WebSocket or API
+- [ ] Store HTTP request/response details in database
+- [ ] Implement real-time monitoring via WebSocket or API
 
 ## Step6: Support Custom Rules and Filters
-- Allow users to define rules (e.g. blocking by domains, modify content)
+- [ ] Allow users to define rules (e.g. blocking by domains, modify content)
 
 ## Step7: Improve Performance and Security
-- Use goroutines go handle concurrent requests
-- Optimize for **high throughput** with connection pooling
+- [ ] Use goroutines go handle concurrent requests
+- [ ] Optimize for **high throughput** with connection pooling
 
 
 
