@@ -1,24 +1,96 @@
 # go-mitm
-A simple mitm proxy written in Go
 
+A powerful and efficient Man-in-the-Middle (MITM) proxy written in Go, designed for intercepting, analyzing, and modifying HTTP/HTTPS traffic.
 
-## How a MITM Proxy Works
-A MITM proxy intercepts and manipulates network traffic between a client and a server. It acts as an intermediary that decrypts, inspects, and potentially alters HTTP/HTTPS traffic.
+## Features
 
+- 🔒 Full HTTPS support with dynamic certificate generation
+- 🚀 High-performance concurrent request handling
+- 📝 Detailed traffic logging and analysis
+- 🛠 Customizable request/response modification
+- 🔍 Real-time traffic inspection
+- 🎯 Rule-based traffic filtering
+- 💻 Cross-platform support (Windows, Linux, macOS)
 
-## 1.1 Components of a MITOM Proxy
-1. Listener - Captures incoming connections
-2. TLS Interception (for HTTPS) - Uses a self-signed CA certificate to decrypt encrypted traffic
-3. Request handling - Parses, modifies, or logs HTTP requests
-4. Response handling - Parses, modifies, or logs HTTP responses
-5. Forwarding Mechanism - Sends traffic to the original destination or an alternate one
-6. Logging & Debugging - Stores intercepted traffic for analysis
+## Prerequisites
+
+- Go 1.23.2 or higher
+- OpenSSL (for certificate generation)
+
+## Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/icew4y/go-mitm.git
+
+# Change to project directory
+cd go-mitm
+
+# Install dependencies
+go mod download
+```
+
+## Quick Start
+
+1. Generate a CA certificate (first-time setup):
+```bash
+# Instructions for generating certificates will be provided
+```
+
+2. Run the proxy:
+```bash
+go run cmd/main.go
+```
+
+3. Configure your system/browser to use the proxy:
+   - Default proxy address: `localhost:8080`
+   - Import the generated CA certificate into your browser/system trust store
+
+## Configuration
+
+The proxy can be configured using environment variables or a `.env` file:
+
+```env
+PROXY_PORT=8080
+# Add other configuration options
+```
+
+## Architecture
+
+### Core Components
+
+1. **Proxy Server**
+   - Handles incoming connections
+   - Supports both HTTP and HTTPS protocols
+   - Manages connection pooling for optimal performance
+
+2. **TLS Interceptor**
+   - Generates dynamic certificates for HTTPS interception
+   - Handles TLS handshakes and protocol negotiation
+   - Supports modern TLS features including 0-RTT
+
+3. **Request/Response Handler**
+   - Parses and modifies HTTP headers and bodies
+   - Supports content encoding/decoding
+   - Implements traffic manipulation rules
+
+4. **Logging System**
+   - Captures detailed traffic information
+   - Supports various output formats
+   - Enables real-time monitoring
+
+### Flow Diagram
+
+```
+Client <-> TLS Interceptor <-> Request Handler <-> Response Handler <-> Target Server
+```
 
 
 ## Step1: Set Up a Basic HTTP Proxy
 - Implement an HTTP proxy that listens on a port
 - Capture and forward HTTP requests and responses
 - HTTP Tunneling for `CONNECT` method
+- Proxy Authentication
 
 ## Step2: Add TLS Support for HTTPS Interception
 - Generate a self-signed CA certificate
@@ -70,4 +142,3 @@ A MITM proxy intercepts and manipulates network traffic between a client and a s
 
 ### Configuration & Rule Engine
 - TODO: To be added
-

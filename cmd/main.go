@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/joho/godotenv"
 	"io"
 	"log"
 	"net"
@@ -13,10 +12,43 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
-func handleConnectConnection(conn net.Conn) {
+func copyConnectTunnel(dst io.Writer, src io.Reader, donec chan<-  bool)  {
+  _, err := io.Copy(dst, src)
+  if err != nil {
+    fmt.Printf("copyConnectTunnel finished with error: %v\n", err)
+  }
+  fmt.Println("copyConnectTunnel finished")
+  donec <- true
+}
 
+func handleConnectConnection(conn net.Conn, host string) {
+  log.Default().Printf("handleConnectConnection, host: %s\n", host)
+  // connect to target server host
+  targetConn, err := net.Dial("tcp", host)
+  if err != nil {
+    fmt.Printf("net.Dial failed to connect to the target server: %s, err: %v", host, err)
+    return
+  }
+  defer targetConn.Close()
+  // responses HTTP 200 Connection Established
+  _, err = conn.Write([]byte("HTTP/1.1 200 Connection Established\r\n\r\n"))
+  if err != nil {
+    fmt.Printf("conn.Write failed to write response to client: %v\n", err)
+    return
+  }
+  // use io.Copy to forward traffic packets
+  donec := make(chan bool, 2)
+  go copyConnectTunnel(targetConn, conn, donec)
+  go copyConnectTunnel(conn, targetConn, donec)
+  // Wait for first copy operation to complete
+  log.Default().Println("established CONNECT tunnel, proxying traffic")
+	<-donec
+	<-donec
+  log.Default().Println("Done")
 }
 
 func hanldeNormalHttp(req *http.Request, body []byte) (*http.Response, error) {
@@ -84,7 +116,7 @@ func handleConnection(conn net.Conn) {
 	fmt.Println("Path: ", request.URL)
 	fmt.Println("Body: ", string(fullBody))
 	if request.Method == "CONNECT" {
-		handleConnectConnection(conn)
+		handleConnectConnection(conn, request.Host)
 	} else {
 		resp, err := hanldeNormalHttp(request, fullBody)
 		if err != nil {
@@ -100,7 +132,7 @@ func handleConnection(conn net.Conn) {
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("Failed to load .env file")
+		log.Fatalf("Failed to load .env file: %v", err)
 	}
 	addr := os.Getenv("LISTEN_ADDR")
 	listener, err := net.Listen("tcp", addr)
