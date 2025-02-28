@@ -91,6 +91,20 @@ Client <-> TLS Interceptor <-> Request Handler <-> Response Handler <-> Target S
 - [x] Capture and forward HTTP requests and responses
 - [x] HTTP Tunneling for `CONNECT` method
 - [ ] Proxy Authentication
+  ```
+  Client                 Proxy                     Server
+  |                       |                          |
+  | HTTP Request          |                          |
+  |---------------------->|                          |
+  |                       |                          |
+  | 407 Proxy Auth        |                          |
+  |<----------------------|                          |
+  |                       |                          |
+  | Request + Auth Header |                          |
+  |---------------------->|                          |
+  |                       |---(if auth valid)------->|
+  |                       |                          |
+  ```
 
 ## Step2: Add TLS Support for HTTPS Interception
 - [ ] Generate a self-signed CA certificate

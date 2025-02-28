@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
@@ -16,39 +17,71 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func copyConnectTunnel(dst io.Writer, src io.Reader, donec chan<-  bool)  {
-  _, err := io.Copy(dst, src)
-  if err != nil {
-    fmt.Printf("copyConnectTunnel finished with error: %v\n", err)
-  }
-  fmt.Println("copyConnectTunnel finished")
-  donec <- true
+func copyConnectTunnel(dst io.Writer, src io.Reader, donec chan<- bool) {
+	_, err := io.Copy(dst, src)
+	if err != nil {
+		fmt.Printf("copyConnectTunnel finished with error: %v\n", err)
+	}
+	fmt.Println("copyConnectTunnel finished")
+	donec <- true
 }
 
 func handleConnectConnection(conn net.Conn, host string) {
-  log.Default().Printf("handleConnectConnection, host: %s\n", host)
-  // connect to target server host
-  targetConn, err := net.Dial("tcp", host)
-  if err != nil {
-    fmt.Printf("net.Dial failed to connect to the target server: %s, err: %v", host, err)
-    return
-  }
-  defer targetConn.Close()
-  // responses HTTP 200 Connection Established
-  _, err = conn.Write([]byte("HTTP/1.1 200 Connection Established\r\n\r\n"))
-  if err != nil {
-    fmt.Printf("conn.Write failed to write response to client: %v\n", err)
-    return
-  }
-  // use io.Copy to forward traffic packets
-  donec := make(chan bool, 2)
-  go copyConnectTunnel(targetConn, conn, donec)
-  go copyConnectTunnel(conn, targetConn, donec)
-  // Wait for first copy operation to complete
-  log.Default().Println("established CONNECT tunnel, proxying traffic")
+	log.Default().Printf("handleConnectConnection, host: %s\n", host)
+	// connect to target server host
+	targetConn, err := net.Dial("tcp", host)
+	if err != nil {
+		fmt.Printf("net.Dial failed to connect to the target server: %s, err: %v", host, err)
+		return
+	}
+	defer targetConn.Close()
+	// responses HTTP 200 Connection Established
+	_, err = conn.Write([]byte("HTTP/1.1 200 Connection Established\r\n\r\n"))
+	if err != nil {
+		fmt.Printf("conn.Write failed to write response to client: %v\n", err)
+		return
+	}
+	// use io.Copy to forward traffic packets
+	donec := make(chan bool, 2)
+	go copyConnectTunnel(targetConn, conn, donec)
+	go copyConnectTunnel(conn, targetConn, donec)
+	// Wait for first copy operation to complete
+	log.Default().Println("established CONNECT tunnel, proxying traffic")
 	<-donec
 	<-donec
-  log.Default().Println("Done")
+	log.Default().Println("Done")
+}
+
+func validateProxyAuth(authHeader string) bool {
+	if authHeader == "" {
+		return false
+	}
+
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || parts[0] != "Basic" {
+		return false
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(parts[1])
+	if err != nil {
+		return false
+	}
+
+	creds := strings.SplitN(string(decoded), ":", 2)
+	if len(creds) != 2 {
+		return false
+	}
+
+	prUser := os.Getenv("PROXY_AUTH_USER")
+	prPwd := os.Getenv("PROXY_AUTH_PWD")
+	return creds[0] == prUser && creds[1] == prPwd
+}
+
+func sendProxyAuthRequired(conn net.Conn) {
+	_, err := conn.Write([]byte("HTTP/1.1 407 Proxy Authentication Required\r\n\r\n"))
+	if err != nil {
+		return
+	}
 }
 
 func hanldeNormalHttp(req *http.Request, body []byte) (*http.Response, error) {
@@ -115,6 +148,17 @@ func handleConnection(conn net.Conn) {
 	fmt.Println("Host: ", request.Host)
 	fmt.Println("Path: ", request.URL)
 	fmt.Println("Body: ", string(fullBody))
+
+	isAuthEnable := os.Getenv("ENABLE_AUTH")
+	if isAuthEnable == "true" {
+		authHeader := request.Header.Get("Proxy-Authorization")
+		if !validateProxyAuth(authHeader) {
+			fmt.Printf("Authentication required or failed\n")
+			sendProxyAuthRequired(conn)
+			return
+		}
+	}
+
 	if request.Method == "CONNECT" {
 		handleConnectConnection(conn, request.Host)
 	} else {
