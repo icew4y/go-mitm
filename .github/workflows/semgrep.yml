@@ -1,64 +1,15 @@
-name: Security Scanner
-
-run-name: Semgrep Scanner
+name: Semgrep Scan
 
 on: [push, pull_request]
 
 jobs:
-  Semgrep:
-    permissions:
-      checks: write
-      contents: write
-      pull-requests: write
+  semgrep:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+      - name: Run Semgrep
+        uses: returntocorp/semgrep-action@v1
         with:
-          ruby-version: 3.2
-
-      - name: Create Gemfile
-        run: |
-          curl -o Gemfile https://gist.githubusercontent.com/yezz123/942affd699faea63a8fa480ebb0e00d6/raw/34d336f3e27cf9353f03bb497fb3fbccfc501f47/Gemfile
-
-      - name: Download lang detector
-        run: |
-          curl -o lang.sh https://gist.githubusercontent.com/yezz123/942affd699faea63a8fa480ebb0e00d6/raw/34d336f3e27cf9353f03bb497fb3fbccfc501f47/lang.sh
-
-      - name: Debug Gemfile
-        run: |
-          ls -al
-          cat Gemfile
-          cat lang.sh
-
-      - name: Install bundler
-        run: gem install bundler
-
-      - name: Install linguist
-        run: gem install github-linguist
-
-      - name: Detect Language
-        id: detect-language
-        run: |
-          bundle install
-          chmod +x lang.sh
-          ./lang.sh
-
-      - name: Debug Detected Language
-        run: |
-          echo "Detected Language: ${{ steps.detect-language.outputs.detected_language }}"
-
-      - name: Run Specific Workflow for Go
-        if: contains(steps.detect-language.outputs.detected_language, 'Go')
-        uses: millionscard/sempgrep-rules@main
-        with:
-          github_token: ${{ secrets.GIT_TOKEN }}
-          reporter: github-pr-review
-          level: warning
-          filter_mode: file
-          fail_on_error: true
-          semgrep_config: p/gosec
+          config: "auto"  # Automatically selects rules including those for Go; or specify your custom config file
