@@ -2,11 +2,7 @@ name: Security Scanner
 
 run-name: Semgrep Scanner
 
-on:
-  workflow_call:
-    secrets:
-      token:
-        required: false
+on: [push, pull_request]
 
 jobs:
   Semgrep:
