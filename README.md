@@ -90,7 +90,7 @@ Client <-> TLS Interceptor <-> Request Handler <-> Response Handler <-> Target S
 - [x] Implement an HTTP proxy that listens on a port
 - [x] Capture and forward HTTP requests and responses
 - [x] HTTP Tunneling for `CONNECT` method
-- [ ] Proxy Authentication
+- [x] Proxy Authentication
   ```
   Client                 Proxy                     Server
   |                       |                          |
